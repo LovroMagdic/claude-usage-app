@@ -1,6 +1,6 @@
 # Agent Usage — Windows tray app
 
-https://youtu.be/qay3MA1jjs0
+https://youtu.be/vB-A00MWdHA
 
 A tiny background app that lives in the Windows system tray and shows your
 current agent usage at a glance. Left-click the icon to pop up a small window;
