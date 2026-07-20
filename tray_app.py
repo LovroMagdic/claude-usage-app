@@ -28,7 +28,7 @@ import pystray
 from PIL import Image, ImageDraw, ImageTk
 
 LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "claudecode.png")
+                         "agent usage mascot.png")
 
 import usage_data
 
@@ -221,19 +221,13 @@ class UsageApp:
             pass
 
     def _load_logo(self, px):
-        """Load the pre-rasterized Claude Code logo, scaled to px height.
-        The source PNG has an opaque dark (#0a0a0a) background baked in, so we
-        key it out into an alpha channel — that keeps the mark transparent on
-        any window background (e.g. the card design's #1e1e1e header).
+        """Load the pixel-fish mascot, scaled to px height.
+        The source PNG is already RGBA with a transparent background, so we use
+        its alpha as-is — that keeps the mark transparent on any window
+        background and preserves the mascot's blue untouched.
         Returns a PhotoImage (keep a reference) or None if unavailable."""
         try:
-            im = Image.open(LOGO_PATH).convert("RGB")
-            # alpha from brightness: the dark backdrop -> transparent, the
-            # bright orange mark -> opaque, with a soft edge in between.
-            alpha = im.convert("L").point(
-                lambda p: 0 if p < 16 else min(255, (p - 12) * 12))
-            im = im.convert("RGBA")
-            im.putalpha(alpha)
+            im = Image.open(LOGO_PATH).convert("RGBA")
             im = im.resize((px, px), Image.LANCZOS)
             return ImageTk.PhotoImage(im)
         except Exception:
