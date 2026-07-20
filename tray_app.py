@@ -1,5 +1,5 @@
 """
-Claude Usage — a background system-tray app for Windows.
+Agent Usage — a background system-tray app for Windows.
 
 Sits in the taskbar tray. Left-click the icon to pop up a small window that
 shows, at a glance:
@@ -44,7 +44,7 @@ BG        = "#0a0a0a"   # window background
 BORDER    = "#262626"   # outer border
 DIV       = "#1f1f1f"   # section dividers
 DIV_ROW   = "#1a1a1a"   # token-row separators
-TITLE     = "#f5f5f5"   # "claude usage"
+TITLE     = "#f5f5f5"   # "agent usage"
 FG        = "#e5e5e5"   # values, percentages, bar fill
 LABEL     = "#cccccc"   # limit labels (session / weekly)
 ROW_LABEL = "#f0f0f0"   # token-row labels
@@ -243,7 +243,7 @@ class UsageApp:
     def _build_window(self):
         self.root = tk.Tk()
         self.root.withdraw()
-        self.root.title("Claude Usage")
+        self.root.title("Agent Usage")
         self.root.overrideredirect(True)
         self.root.configure(bg=BG)
         self.root.attributes("-topmost", True)
@@ -379,7 +379,7 @@ class UsageApp:
         lim = snap.get("limits", {})
         tok = snap.get("tokens", {})
 
-        # --- header (claude usage · PRO / ×) ---
+        # --- header (agent usage · PRO / ×) ---
         header = tk.Frame(self.outer, bg=BG)
         header.pack(fill="x")
         hin = tk.Frame(header, bg=BG)
@@ -389,7 +389,7 @@ class UsageApp:
         if self._logo_img is not None:
             tk.Label(left, image=self._logo_img, bg=BG).pack(
                 side="left", padx=(0, 9))
-        tk.Label(left, text="claude usage", bg=BG, fg=TITLE,
+        tk.Label(left, text="agent usage", bg=BG, fg=TITLE,
                  font=(FONT, 11)).pack(side="left")
         badge = tk.Frame(left, bg=BG, highlightthickness=1,
                          highlightbackground=BADGE_BD)
@@ -712,7 +712,7 @@ class UsageApp:
         msg = (f"Your 5-hour usage limit has reset "
                f"(was at {prev_pct:.0f}%). You're back to full capacity.")
         try:
-            self.icon.notify(msg, "Claude Usage")
+            self.icon.notify(msg, "Agent Usage")
         except Exception:
             pass
 
@@ -720,7 +720,7 @@ class UsageApp:
     def _tooltip(session_pct, weekly_pct):
         s = "—" if session_pct is None else f"{session_pct:.0f}%"
         w = "—" if weekly_pct is None else f"{weekly_pct:.0f}%"
-        return f"Claude Usage\nSession: {s}  ·  Weekly: {w}"
+        return f"Agent Usage\nSession: {s}  ·  Weekly: {w}"
 
     # ---- tray icon --------------------------------------------------------
     def _build_icon(self):
@@ -741,8 +741,8 @@ class UsageApp:
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Quit", self._on_quit),
         )
-        self.icon = pystray.Icon("claude_usage", make_icon_image(None),
-                                 "Claude Usage", menu)
+        self.icon = pystray.Icon("agent_usage", make_icon_image(None),
+                                 "Agent Usage", menu)
 
     # pystray callbacks run on the icon's own thread -> marshal to tk
     def _on_show(self, icon, item):
