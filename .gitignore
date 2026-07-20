@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+
+# Local runtime state / personal data
+.usage_cache.json
+.app_config.json
+
+# Environment config (never commit — copy .env.example to .env)
+.env
