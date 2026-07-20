@@ -36,6 +36,24 @@ real screenshots of the tray icon at different usage levels:
   Subscription users aren't billed per token — this is a "what it would cost on
   the API" estimate.
 
+## Designs
+
+The popup ships with two looks, switchable at any time from the tray menu
+(**right-click the icon → *Design***). Your choice is remembered between runs.
+
+- **Monochrome** *(default)* — the original flat, monospace card: a single
+  accent-free palette with a Claude Code logo header, plain progress bars, and a
+  footer showing the last-updated time.
+- **Card (colored)** — a softer sans-serif card with a larger Claude logo in the
+  header and **color-coded severity bars** for each limit: 🟢 green under 50%,
+  🟠 amber 50–79%, 🔴 red 80%+.
+
+<p align="center">
+  <img src="readme_images/card_design.png" alt="Card (colored) design popup" width="392">
+</p>
+
+Both designs have rounded corners and show the same live numbers.
+
 ## Notifications
 
 When your 5-hour session limit rolls over, the app pops a Windows toast so you
@@ -81,6 +99,8 @@ Startup folder (`shell:startup` in the Run dialog).
 
 - **Refresh:** click the ↻ button, or right-click the tray icon → *Refresh now*.
 - **Show/hide cost:** right-click the tray icon → *Show API cost estimate*.
+- **Switch design:** right-click the tray icon → *Design* → *Monochrome* or
+  *Card (colored)*.
 - **Quit:** right-click the tray icon → *Quit*.
 
 ## How it works
