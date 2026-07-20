@@ -14,6 +14,10 @@ session fills up.
   &nbsp;the tray icon fills and changes color with your 5-hour session.
 </p>
 
+<p align="center">
+  <img src="readme_images/notification_image.png" alt="Claude Usage notification popup" width="440">
+</p>
+
 ## What it shows
 
 - **Plan limits** — your 5-hour *session* and *weekly* usage %, with reset
