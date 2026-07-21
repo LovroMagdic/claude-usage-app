@@ -137,6 +137,23 @@ def human_tokens(n):
     return str(n)
 
 
+_CURRENCY_SYMBOLS = {"EUR": "€", "USD": "$", "GBP": "£", "JPY": "¥"}
+
+
+def cur_sym(code):
+    """Symbol for a currency code (falls back to the code itself)."""
+    code = (code or "").upper()
+    return _CURRENCY_SYMBOLS.get(code, (code + " ") if code else "$")
+
+
+def month_reset_text():
+    """'Resets Aug 1' — the monthly usage-credit spend resets on the 1st of the
+    next month (the endpoint doesn't return this timestamp itself)."""
+    now = datetime.now()
+    nm = datetime(now.year + (now.month == 12), (now.month % 12) + 1, 1)
+    return "Resets " + nm.strftime("%b ") + str(nm.day)
+
+
 def human_reset(iso):
     if not iso:
         return ""
@@ -194,6 +211,7 @@ class UsageApp:
         self._prev_session_pct = None     # last-seen session utilization
         cfg = self._load_config()
         self.show_cost = cfg.get("show_cost", False)
+        self.show_credit = cfg.get("show_credit", False)
         self.design = cfg.get("design", "classic")   # "classic" | "v4"
         # refresh-glyph colors (design-dependent; set again on each render)
         self._refresh_color = REFRESH
@@ -216,6 +234,7 @@ class UsageApp:
         try:
             with open(CONFIG_PATH, "w", encoding="utf-8") as f:
                 json.dump({"show_cost": self.show_cost,
+                           "show_credit": self.show_credit,
                            "design": self.design}, f)
         except Exception:
             pass
@@ -352,6 +371,56 @@ class UsageApp:
         tk.Label(rin, text=detail, bg=BG, fg=SUB,
                  font=(FONT, 8)).pack(anchor="w", pady=(2, 0))
 
+    # ---- usage credits (real spend vs monthly $ limit) -------------------
+    def _credit_section_classic(self, parent, cr):
+        """Monochrome 'usage credits' block: spent + % used bar, reset, and the
+        monthly spend limit — mirrors the PLAN LIMITS bar styling."""
+        if not cr:
+            tk.Label(parent, text="not available", bg=BG, fg=SUB,
+                     font=(FONT, 8)).pack(anchor="w")
+            return
+        if not cr.get("enabled"):
+            reason = cr.get("disabled_reason") or "usage credits are off"
+            tk.Label(parent, text=reason, bg=BG, fg=SUB, font=(FONT, 8),
+                     wraplength=self.W - 40, justify="left").pack(anchor="w")
+            return
+
+        sym = cur_sym(cr.get("currency"))
+        spent, limit, pct = cr.get("spent"), cr.get("limit"), cr.get("percent")
+        unlimited = cr.get("unlimited")
+
+        row = tk.Frame(parent, bg=BG)
+        row.pack(fill="x")
+        head = tk.Frame(row, bg=BG)
+        head.pack(fill="x")
+        spent_txt = "—" if spent is None else f"{sym}{spent:,.2f} spent"
+        tk.Label(head, text=spent_txt, bg=BG, fg=LABEL,
+                 font=(FONT, 9)).pack(side="left")
+        # no cap => no meaningful percentage or bar; show the spend + reset only
+        if not unlimited:
+            pct_txt = "—" if pct is None else f"{pct:.0f}% used"
+            tk.Label(head, text=pct_txt, bg=BG, fg=FG,
+                     font=(FONT, 9)).pack(side="right")
+            cw = self.W - 36
+            cv = tk.Canvas(row, height=4, width=cw, bg=BG,
+                           highlightthickness=0)
+            cv.pack(fill="x", pady=(6, 0))
+            self._round_rect(cv, 0, 0, cw, 4, 2, TRACK)
+            if pct:
+                fillw = max(4, int(cw * min(pct, 100) / 100))
+                self._round_rect(cv, 0, 0, fillw, 4, 2, BAR_FILL)
+        tk.Label(row, text=month_reset_text(), bg=BG, fg=SUB,
+                 font=(FONT, 8)).pack(anchor="w", pady=(6, 0))
+
+        if unlimited or limit is not None:
+            lim = tk.Frame(parent, bg=BG)
+            lim.pack(fill="x", pady=(12, 0))
+            lim_txt = "Unlimited" if unlimited else f"{sym}{limit:,.2f}"
+            tk.Label(lim, text=lim_txt, bg=BG, fg=LABEL,
+                     font=(FONT, 9)).pack(side="left")
+            tk.Label(lim, text="monthly spend limit", bg=BG, fg=SUB,
+                     font=(FONT, 8)).pack(side="left", padx=(8, 0))
+
     # ---- render (dispatch on active design) ------------------------------
     def render(self):
         if self.design == "v4":
@@ -441,6 +510,16 @@ class UsageApp:
             tk.Label(pl, text=lim["error"], bg=BG, fg=SUB,
                      font=(FONT, 8), wraplength=self.W - 40,
                      justify="left").pack(anchor="w")
+
+        # --- usage credits (hidden unless toggled on) ---
+        if self.show_credit:
+            tk.Frame(self.body, height=1, bg=DIV).pack(fill="x",
+                                                       padx=18, pady=8)
+            cl = tk.Frame(self.body, bg=BG)
+            cl.pack(fill="x", padx=18, pady=(6, 8))
+            self._section_label(cl, "USAGE CREDITS")
+            tk.Frame(cl, height=12, bg=BG).pack()  # spacer
+            self._credit_section_classic(cl, lim.get("credit"))
 
         # --- tokens (hidden unless toggled on) ---
         if self.show_cost:
@@ -547,6 +626,64 @@ class UsageApp:
                      justify="left").pack(anchor="w", padx=16, pady=13)
         elif not rows:
             tk.Frame(self.outer, height=13, bg=V4_BG).pack()
+
+        # --- usage credits (hidden unless toggled on) ---
+        if self.show_credit:
+            cr = lim.get("credit")
+            tk.Frame(self.outer, height=1, bg=V4_ROW_DIV).pack(fill="x")
+            tk.Label(self.outer, text="USAGE CREDITS", bg=V4_BG, fg=V4_RESET,
+                     font=(V4_FONT, -10)).pack(anchor="w", padx=16,
+                                               pady=(11, 3))
+            row = tk.Frame(self.outer, bg=V4_BG)
+            row.pack(fill="x", padx=16, pady=13)
+
+            if not cr:
+                tk.Label(row, text="Not available", bg=V4_BG, fg=V4_RESET,
+                         font=(V4_FONT, -12)).pack(anchor="w")
+            elif not cr.get("enabled"):
+                tk.Label(row,
+                         text=cr.get("disabled_reason") or "Usage credits are off",
+                         bg=V4_BG, fg=V4_RESET, font=(V4_FONT, -12),
+                         wraplength=self.W - 32, justify="left").pack(anchor="w")
+            else:
+                sym = cur_sym(cr.get("currency"))
+                spent, limit = cr.get("spent"), cr.get("limit")
+                pct = cr.get("percent")
+                unlimited = cr.get("unlimited")
+
+                head = tk.Frame(row, bg=V4_BG)
+                head.pack(fill="x")
+                spent_txt = "—" if spent is None else f"{sym}{spent:,.2f} spent"
+                tk.Label(head, text=spent_txt, bg=V4_BG, fg=V4_LABEL,
+                         font=(V4_FONT, -14, "bold")).pack(side="left")
+                # no cap => no meaningful percentage or bar
+                if not unlimited:
+                    pct_txt = "—" if pct is None else f"{pct:.0f}% used"
+                    tk.Label(head, text=pct_txt, bg=V4_BG, fg=V4_PCT,
+                             font=(V4_FONT, -13)).pack(side="right")
+                tk.Label(head, text=month_reset_text(), bg=V4_BG, fg=V4_RESET,
+                         font=(V4_FONT, -13)).pack(side="right", padx=(0, 14))
+
+                if not unlimited:
+                    cw = self.W - 32
+                    cv = tk.Canvas(row, height=3, width=cw, bg=V4_BG,
+                                   highlightthickness=0)
+                    cv.pack(fill="x", pady=(9, 0))
+                    self._round_rect(cv, 0, 0, cw, 3, 1, V4_TRACK)
+                    if pct:
+                        fillw = max(3, int(cw * min(pct, 100) / 100))
+                        self._round_rect(cv, 0, 0, fillw, 3, 1,
+                                         v4_bar_color(pct))
+
+                if unlimited or limit is not None:
+                    lim = tk.Frame(row, bg=V4_BG)
+                    lim.pack(fill="x", pady=(9, 0))
+                    lim_txt = "Unlimited" if unlimited else f"{sym}{limit:,.2f}"
+                    tk.Label(lim, text=lim_txt, bg=V4_BG,
+                             fg=V4_LABEL, font=(V4_FONT, -13)).pack(side="left")
+                    tk.Label(lim, text="monthly spend limit", bg=V4_BG,
+                             fg=V4_RESET, font=(V4_FONT, -12)).pack(
+                                 side="left", padx=(8, 0))
 
     # ---- show / hide (animated) ------------------------------------------
     def _cancel_anim(self):
@@ -731,6 +868,8 @@ class UsageApp:
             pystray.MenuItem("Refresh now", self._on_refresh),
             pystray.MenuItem("Show API cost estimate", self._on_toggle_cost,
                              checked=lambda item: self.show_cost),
+            pystray.MenuItem("Show usage credits", self._on_toggle_credit,
+                             checked=lambda item: self.show_credit),
             pystray.MenuItem("Design", design_menu),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Quit", self._on_quit),
@@ -748,6 +887,14 @@ class UsageApp:
     def _on_toggle_cost(self, icon, item):
         def do():
             self.show_cost = not self.show_cost
+            self._save_config()
+            if self.root.state() != "withdrawn":
+                self._rerender_resize()
+        self.root.after(0, do)
+
+    def _on_toggle_credit(self, icon, item):
+        def do():
+            self.show_credit = not self.show_credit
             self._save_config()
             if self.root.state() != "withdrawn":
                 self._rerender_resize()

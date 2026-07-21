@@ -234,6 +234,42 @@ def fetch_limits(force: bool = False) -> dict:
             "resets_at": d.get("resets_at"),
         }
 
+    def money(m):
+        """A {'amount_minor', 'currency', 'exponent'} money object -> float in
+        major units (e.g. {'amount_minor': 1234, 'exponent': 2} -> 12.34)."""
+        if not isinstance(m, dict):
+            return None
+        try:
+            exp = m.get("exponent", 2)
+            return m.get("amount_minor", 0) / (10 ** exp)
+        except Exception:
+            return None
+
+    # usage credits (extra usage) — spend against a monthly $ limit
+    spend = data.get("spend") if isinstance(data.get("spend"), dict) else None
+    credit = None
+    if spend:
+        used, limit = spend.get("used"), spend.get("limit")
+        cap_money = (spend.get("cap") or {}).get("money")
+        cur = ((used or {}).get("currency")
+               or (limit or {}).get("currency")
+               or (cap_money or {}).get("currency") or "")
+        limit_val = money(limit)
+        if limit_val is None:
+            limit_val = money(cap_money)
+        enabled = bool(spend.get("enabled"))
+        credit = {
+            "enabled": enabled,
+            "spent": money(used),
+            "limit": limit_val,
+            # enabled with no monetary cap anywhere => spending is uncapped
+            "unlimited": enabled and limit_val is None,
+            "balance": money(spend.get("balance")),
+            "percent": spend.get("percent"),
+            "currency": cur,
+            "disabled_reason": spend.get("disabled_reason"),
+        }
+
     scoped = []
     for lim in data.get("limits") or []:
         if lim.get("kind") == "weekly_scoped" and lim.get("scope"):
@@ -251,6 +287,7 @@ def fetch_limits(force: bool = False) -> dict:
         "session": block(data.get("five_hour")),
         "weekly": block(data.get("seven_day")),
         "weekly_scoped": scoped,
+        "credit": credit,
         "plan": oauth.get("subscriptionType"),
     }
     _save_cache(result)

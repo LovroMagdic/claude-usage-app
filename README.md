@@ -3,9 +3,10 @@
 https://youtu.be/vB-A00MWdHA
 
 A tiny background app that lives in the Windows system tray and shows your
-current agent usage at a glance. Left-click the icon to pop up a small window;
-the icon itself is a ring that turns **green → amber → red** as your 5-hour
-session fills up.
+current agent usage at a glance — plan limits, estimated API cost, and your
+**usage-credit spend** — all in one popup. Left-click the icon to pop up a small
+window; the icon itself is a ring that turns **green → amber → red** as your
+5-hour session fills up.
 
 <p align="center">
   <img src="readme_images/window_design_v1.png" alt="Agent Usage popup window" width="440">
@@ -37,6 +38,13 @@ real screenshots of the tray icon at different usage levels:
   read from your local Claude Code transcripts in `~/.claude/projects/`.
   Subscription users aren't billed per token — this is a "what it would cost on
   the API" estimate.
+- **Usage credits** *(optional, toggle in the tray menu)* — your real extra-usage
+  spend against your monthly spend limit, in your account currency, shown as a
+  plan-limit-style bar: amount spent, **% used**, the reset date, and the
+  monthly spend limit. When your limit is set to **unlimited**, it says so (and
+  drops the bar, since there's no cap to fill). Same numbers as the *Usage
+  credits* panel in Claude's settings, read live from the same `/usage`
+  endpoint — not an estimate.
 
 ## Designs
 
@@ -101,6 +109,7 @@ Startup folder (`shell:startup` in the Run dialog).
 
 - **Refresh:** click the ↻ button, or right-click the tray icon → *Refresh now*.
 - **Show/hide cost:** right-click the tray icon → *Show API cost estimate*.
+- **Show/hide usage credits:** right-click the tray icon → *Show usage credits*.
 - **Switch design:** right-click the tray icon → *Design* → *Monochrome* or
   *Card (colored)*.
 - **Quit:** right-click the tray icon → *Quit*.
