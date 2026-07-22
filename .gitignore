@@ -1,10 +1,48 @@
-# Python
-__pycache__/
-*.pyc
+# ==========================================================================
+#  SECURITY — never commit secrets or personal data
+#  These files may contain your OAuth tokens, client ID, account currency,
+#  spend/usage numbers, or machine paths. Keep them local only.
+# ==========================================================================
 
-# Local runtime state / personal data
+# Environment config — holds CLAUDE_CLIENT_ID (copy .env.example to .env)
+.env
+.env.*
+!.env.example
+
+# OAuth / API credentials and tokens (defensive — the app reads these from
+# ~/.claude, but never let a stray copy land in the repo)
+.credentials.json
+*credentials*.json
+*.token
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Local runtime state / personal usage data written next to the app
 .usage_cache.json
 .app_config.json
 
-# Environment config (never commit — copy .env.example to .env)
-.env
+# ==========================================================================
+#  Build output
+# ==========================================================================
+
+# PyInstaller (the dist/ folder also collects personal cache/config at runtime)
+build/
+dist/
+*.manifest
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# ==========================================================================
+#  OS / editor cruft
+# ==========================================================================
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+.idea/
+.vscode/

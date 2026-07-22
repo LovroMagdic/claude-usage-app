@@ -1,7 +1,32 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
+
+
+def app_dir() -> Path:
+    """Directory for user-supplied / writable files (.env, caches, config).
+
+    When frozen by PyInstaller this is the folder that holds the .exe, so these
+    files live next to the binary and survive between runs. In a normal Python
+    run it's the source directory.
+    """
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+def resource_dir() -> Path:
+    """Directory for read-only bundled assets (e.g. the mascot PNG).
+
+    PyInstaller unpacks bundled data to a temp dir exposed as ``sys._MEIPASS``.
+    Outside a frozen build it's just the source directory.
+    """
+    base = getattr(sys, "_MEIPASS", None)
+    if base:
+        return Path(base)
+    return Path(__file__).resolve().parent
 
 
 def _load_dotenv() -> None:
@@ -11,7 +36,7 @@ def _load_dotenv() -> None:
     parser so the app runs with zero extra dependencies. Existing environment
     variables always win (we only set defaults).
     """
-    env_path = Path(__file__).with_name(".env")
+    env_path = app_dir() / ".env"
     try:
         from dotenv import load_dotenv  # type: ignore
         load_dotenv(env_path, override=False)
@@ -57,7 +82,7 @@ class Config:
     OAUTH_BETA: str = _get("CLAUDE_OAUTH_BETA", "oauth-2025-04-20")
 
     # --- rate limiting for the /usage endpoint -------------------------------
-    MIN_LIMITS_INTERVAL: int = _get_int("CLAUDE_MIN_LIMITS_INTERVAL", 300)
+    MIN_LIMITS_INTERVAL: int = _get_int("CLAUDE_MIN_LIMITS_INTERVAL", 120)
     BACKOFF_BASE: int = _get_int("CLAUDE_BACKOFF_BASE", 300)
     BACKOFF_MAX: int = _get_int("CLAUDE_BACKOFF_MAX", 1800)
 

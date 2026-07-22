@@ -8,7 +8,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
-from config import config
+from config import config, app_dir
 
 # --- constants -------------------------------------------------------------
 
@@ -17,8 +17,7 @@ CREDENTIALS_PATH = os.path.join(CLAUDE_DIR, ".credentials.json")
 PROJECTS_GLOB = os.path.join(CLAUDE_DIR, "projects", "*", "*.jsonl")
 
 # where we cache the last successful limits response (survives 429s & restarts)
-CACHE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          ".usage_cache.json")
+CACHE_PATH = str(app_dir() / ".usage_cache.json")
 
 # The /usage endpoint is rate-limited, so we call it at most this often and
 # back off on 429. In between, the last-good cached value is returned.

@@ -73,7 +73,26 @@ know you're back to full capacity — no need to open the popup or run `/usage`.
   <img src="readme_images/reset_notification.png" alt="Agent Usage session-reset notification" width="440">
 </p>
 
-## Requirements
+## Download (no Python needed)
+
+Grab **`AgentUsage.exe`** from the [latest release](../../releases/latest) — a
+single self-contained Windows binary, no Python install required.
+
+1. Put `AgentUsage.exe` in a folder of its own (e.g. `Documents\AgentUsage\`).
+2. In that same folder, create a **`.env`** file (copy [`.env.example`](.env.example))
+   and fill in `CLAUDE_CLIENT_ID`. The app reads `.env` from the folder the
+   `.exe` lives in.
+3. Double-click `AgentUsage.exe`. It appears in the system tray.
+
+> **Windows SmartScreen:** the binary is unsigned, so the first launch may show
+> *"Windows protected your PC."* Click **More info → Run anyway**. This is
+> normal for unsigned open-source apps.
+
+The app writes its cache (`.usage_cache.json`) and settings
+(`.app_config.json`) next to the `.exe`. To start it at login, drop a shortcut
+to `AgentUsage.exe` in your Startup folder (`shell:startup`).
+
+## Requirements (running from source)
 
 - Windows
 - Python 3.11+
@@ -114,6 +133,22 @@ Startup folder (`shell:startup` in the Run dialog).
   *Card (colored)*.
 - **Quit:** right-click the tray icon → *Quit*.
 
+## Building a release binary
+
+Build the single-file `.exe` locally, then attach it to a GitHub Release.
+
+```bat
+build.bat
+```
+
+This installs PyInstaller, runs `AgentUsage.spec`, and produces
+`dist\AgentUsage.exe` (windowed, no console, mascot + icon bundled in). Then:
+
+1. On GitHub → **Releases → Draft a new release**, create a tag (e.g. `v1.0.0`).
+2. Attach `dist\AgentUsage.exe` as a release asset and publish.
+
+The build embeds no secrets — users supply their own `.env` next to the exe.
+
 ## How it works
 
 - `tray_app.py` — the tray icon + popup UI.
@@ -123,5 +158,6 @@ Startup folder (`shell:startup` in the Run dialog).
 The app only reads local files plus one authenticated HTTPS GET to
 `api.anthropic.com`; it never writes anything except refreshing an expired OAuth
 token in place. The `/usage` endpoint is rate-limited, so limits are polled at
-most once every 5 minutes (with 429 back-off) and cached locally; token/cost
-data refreshes every minute from local files.
+most once every 2 minutes (with 429 back-off) and cached locally; a manual
+*Refresh now* bypasses the interval; token/cost data refreshes every minute from
+local files.

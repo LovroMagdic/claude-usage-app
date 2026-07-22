@@ -27,8 +27,9 @@ from datetime import datetime, timezone
 import pystray
 from PIL import Image, ImageDraw, ImageTk
 
-LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "agent usage mascot.png")
+from config import app_dir, resource_dir
+
+LOGO_PATH = str(resource_dir() / "agent usage mascot.png")
 
 import usage_data
 
@@ -92,8 +93,7 @@ SLIDE_PX   = 14         # how far the window slides while fading
 SPINNER    = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"   # braille frames for the refresh spinner
 MIN_SPIN_S = 0.45       # keep the spinner up at least this long
 
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           ".app_config.json")
+CONFIG_PATH = str(app_dir() / ".app_config.json")
 
 # Notify when the 5-hour session resets, but only if it was used at least this
 # much beforehand (a reset from ~0% isn't worth a popup). Set to 0 to always
