@@ -22,12 +22,6 @@ real screenshots of the tray icon at different usage levels:
   <img src="readme_images/tray_icon_stages.png" alt="Tray icon at 22%, 45%, 68% and 95% usage" width="620">
 </p>
 
-| Fill | Color | Meaning |
-|------|-------|---------|
-| under 60% | 🟢 green  | plenty of session headroom |
-| 60–84%    | 🟠 amber  | getting close |
-| 85%+      | 🔴 red    | nearly at the 5-hour limit |
-
 ## What it shows
 
 - **Plan limits** — your 5-hour *session* and *weekly* usage %, with reset
@@ -92,11 +86,3 @@ The app writes its cache (`.usage_cache.json`) and settings
 (`.app_config.json`) next to the `.exe`. To start it at login, drop a shortcut
 to `AgentUsage.exe` in your Startup folder (`shell:startup`).
 
-## How it works
-
-The app only reads local files plus one authenticated HTTPS GET to
-`api.anthropic.com`; it never writes anything except refreshing an expired OAuth
-token in place. The `/usage` endpoint is rate-limited, so limits are polled at
-most once every 2 minutes (with 429 back-off) and cached locally; a manual
-*Refresh now* bypasses the interval; token/cost data refreshes every minute from
-local files.
