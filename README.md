@@ -92,68 +92,7 @@ The app writes its cache (`.usage_cache.json`) and settings
 (`.app_config.json`) next to the `.exe`. To start it at login, drop a shortcut
 to `AgentUsage.exe` in your Startup folder (`shell:startup`).
 
-## Requirements (running from source)
-
-- Windows
-- Python 3.11+
-- `pip install -r requirements.txt`
-
-## Running
-
-Install the dependencies once:
-
-```bat
-pip install -r requirements.txt
-```
-
-Then start the app with no console window:
-
-```bat
-pythonw tray_app.py
-```
-
-Or double-click **`Agent Usage.bat`** (a silent launcher). The launcher runs
-the app under a uniquely-named copy of the Python runtime (`AgentUsage.exe`,
-created next to `pythonw.exe` on first run) so the tray icon gets its **own
-identity** — dragging it in or out of the hidden-icons flyout won't drag your
-other Python tray apps along with it.
-
-Only run **one** instance at a time — launching it again adds a second identical
-icon to the tray. If you see duplicates, close the extras from *Task Manager*
-(end the `pythonw.exe` / `AgentUsage.exe` process running `tray_app.py`) or
-right-click each icon → *Quit*.
-
-To start it automatically at login, drop a shortcut to the `.bat` into your
-Startup folder (`shell:startup` in the Run dialog).
-
-- **Refresh:** click the ↻ button, or right-click the tray icon → *Refresh now*.
-- **Show/hide cost:** right-click the tray icon → *Show API cost estimate*.
-- **Show/hide usage credits:** right-click the tray icon → *Show usage credits*.
-- **Switch design:** right-click the tray icon → *Design* → *Monochrome* or
-  *Card (colored)*.
-- **Quit:** right-click the tray icon → *Quit*.
-
-## Building a release binary
-
-Build the single-file `.exe` locally, then attach it to a GitHub Release.
-
-```bat
-build.bat
-```
-
-This installs PyInstaller, runs `AgentUsage.spec`, and produces
-`dist\AgentUsage.exe` (windowed, no console, mascot + icon bundled in). Then:
-
-1. On GitHub → **Releases → Draft a new release**, create a tag (e.g. `v1.0.0`).
-2. Attach `dist\AgentUsage.exe` as a release asset and publish.
-
-The build embeds no secrets — users supply their own `.env` next to the exe.
-
 ## How it works
-
-- `tray_app.py` — the tray icon + popup UI.
-- `usage_data.py` — data layer: the `/usage` limits endpoint plus transcript
-  parsing.
 
 The app only reads local files plus one authenticated HTTPS GET to
 `api.anthropic.com`; it never writes anything except refreshing an expired OAuth
